@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آزمون ریاضی</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            direction: rtl;
+        }
+        .container {
+            display: inline-block;
+            text-align: right;
+        }
+        #question {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            padding: 10px;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        #result, #finalResult {
+            font-size: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="selectTestType">
+        <label for="testType">لطفا نوع آزمون را انتخاب کنید:</label>
+        <select id="testType">
+            <option value="sum">جمع</option>
+            <option value="quadratic">معادله درجه دو</option>
+        </select>
+        <button onclick="startTest()">شروع آزمون</button>
+    </div>
+
+    <div id="testSection" style="display:none;">
+        <div id="question">در حال بارگذاری سوال...</div>
+        <input type="number" id="answerSum" placeholder="پاسخ خود را اینجا وارد کنید" style="display:none;">
+        <div id="quadraticInputs" style="display:none;">
+            <input type="number" id="answerQuad1" placeholder="ریشه اول">
+            <input type="number" id="answerQuad2" placeholder="ریشه دوم">
+        </div>
+        <button onclick="checkAnswer()">ارسال</button>
+        <div id="result"></div>
+        <div id="finalResult"></div>
+    </div>
+</div>
+
+<script>
+    let num1, num2, correctAnswer;
+    let questionCount = 0;
+    const totalQuestions = 10;
+    const questions = [];
+    const userAnswers = [];
+    const correctAnswers = [];
+    let testType;
+
+    function toPersianNumber(num) {
+        return num.toString().replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+    }
+
+    function startTest() {
+        testType = document.getElementById('testType').value;
+        document.getElementById('selectTestType').style.display = 'none';
+        document.getElementById('testSection').style.display = 'block';
+        questionCount = 0;
+        questions.length = 0;
+        userAnswers.length = 0;
+        correctAnswers.length = 0;
+
+        if (testType === "sum") {
+            document.getElementById('answerSum').style.display = 'inline-block';
+            document.getElementById('quadraticInputs').style.display = 'none';
+        } else if (testType === "quadratic") {
+            document.getElementById('answerSum').style.display = 'none';
+            document.getElementById('quadraticInputs').style.display = 'inline-block';
+        }
+        generateQuestion();
+    }
+
+    function generateQuestion() {
+        if (questionCount < totalQuestions) {
+            if (testType === "sum") {
+                num1 = Math.floor(Math.random() * 10) + 1;
+                num2 = Math.floor(Math.random() * 10) + 1;
+                correctAnswer = num1 + num2;
+                document.getElementById('question').textContent = `مجموع ${toPersianNumber(num1)} + ${toPersianNumber(num2)} چند است؟`;
+            } else if (testType === "quadratic") {
+                num1 = Math.floor(Math.random() * 10) + 1;
+                num2 = Math.floor(Math.random() * 10) - 5;
+                const root1 = num1;
+                const root2 = num2;
+                correctAnswer = [root1, root2];
+                document.getElementById('question').textContent = `ریشه‌های معادله x² + ${toPersianNumber(-(root1 + root2))}x + ${toPersianNumber(root1 * root2)} = ۰ را پیدا کنید.`;
+            }
+            document.getElementById('result').textContent = '';
+            document.getElementById('answerSum').value = '';
+            document.getElementById('answerQuad1').value = '';
+            document.getElementById('answerQuad2').value = '';
+        } else {
+            showFinalResult();
+        }
+    }
+
+    function checkAnswer() {
+        if (questionCount >= totalQuestions) {
+            return;
+        }
+
+        if (testType === "sum") {
+            let userAnswer = parseInt(document.getElementById('answerSum').value);
+            if (isNaN(userAnswer)) {
+                document.getElementById('result').textContent = 'لطفاً یک عدد معتبر وارد کنید.';
+                return;
+            }
+            questions.push(`${toPersianNumber(num1)} + ${toPersianNumber(num2)}`);
+            userAnswers.push(userAnswer);
+            correctAnswers.push(correctAnswer);
+            document.getElementById('result').textContent = userAnswer === correctAnswer ? 'درست است!' : 'اشتباه است.';
+        } else if (testType === "quadratic") {
+            let userAnswer1 = parseInt(document.getElementById('answerQuad1').value);
+            let userAnswer2 = parseInt(document.getElementById('answerQuad2').value);
+            if (isNaN(userAnswer1) || isNaN(userAnswer2)) {
+                document.getElementById('result').textContent = 'لطفاً دو عدد معتبر وارد کنید.';
+                return;
+            }
+
+            questions.push(`x² + ${toPersianNumber(-(correctAnswer[0] + correctAnswer[1]))}x + ${toPersianNumber(correctAnswer[0] * correctAnswer[1])}`);
+            userAnswers.push([userAnswer1, userAnswer2]);
+            correctAnswers.push(correctAnswer);
+
+            const isCorrect = (userAnswer1 === correctAnswer[0] && userAnswer2 === correctAnswer[1]) || (userAnswer1 === correctAnswer[1] && userAnswer2 === correctAnswer[0]);
+            document.getElementById('result').textContent = isCorrect ? 'درست است!' : 'اشتباه است.';
+        }
+
+        questionCount++;
+        generateQuestion();
+    }
+
+    function showFinalResult() {
+        let finalResult = `<h3>نتایج:</h3>`;
+        for (let i = 0; i < totalQuestions; i++) {
+            const result = Array.isArray(correctAnswers[i]) ? 
+                ((userAnswers[i][0] === correctAnswers[i][0] && userAnswers[i][1] === correctAnswers[i][1]) || 
+                (userAnswers[i][0] === correctAnswers[i][1] && userAnswers[i][1] === correctAnswers[i][0])) ? 'درست' : 'اشتباه' :
+                userAnswers[i] === correctAnswers[i] ? 'درست' : 'اشتباه';
+
+            finalResult += `<p>سوال ${toPersianNumber(i + 1)}: ${questions[i]} = (پاسخ درست: ${Array.isArray(correctAnswers[i]) ? `(${toPersianNumber(correctAnswers[i][0])}, ${toPersianNumber(correctAnswers[i][1])})` : toPersianNumber(correctAnswers[i])}) (پاسخ شما: ${Array.isArray(userAnswers[i]) ? `(${toPersianNumber(userAnswers[i][0])}, ${toPersianNumber(userAnswers[i][1])})` : toPersianNumber(userAnswers[i])}) - ${result}</p>`;
+        }
+        document.getElementById('finalResult').innerHTML = finalResult;
+    }
+
+    document.getElementById('answerSum').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            checkAnswer();
+        }
+    });
+
+    document.getElementById('answerQuad1').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            checkAnswer();
+        }
+    });
+
+    document.getElementById('answerQuad2').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            checkAnswer();
+        }
+    });
+
+</script>
+
+</body>
+</html>
